@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nl-pl-kgc"
+version = "0.1.0"
+description = "Kaggle-ready reproduction of natural-language versus Python-style prompting for knowledge graph construction"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "ram21275"}]
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+train = [
+  "accelerate==1.2.1",
+  "bitsandbytes==0.45.0",
+  "datasets==3.2.0",
+  "peft==0.14.0",
+  "torch>=2.4",
+  "transformers==4.46.3",
+  "trl==0.13.0",
+]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+nl-pl-kgc = "nl_pl_kgc.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

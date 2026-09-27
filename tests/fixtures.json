@@ -1,0 +1,10 @@
+[
+  {
+    "text": "A patient developed nausea after taking DrugX.",
+    "triple_list": [["nausea", "Adverse_effect", "DrugX"]]
+  },
+  {
+    "text": "DrugY was well tolerated.",
+    "triple_list": []
+  }
+]

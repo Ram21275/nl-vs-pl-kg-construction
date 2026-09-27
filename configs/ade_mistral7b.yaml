@@ -1,0 +1,27 @@
+model_name: mistralai/Mistral-7B-Instruct-v0.3
+dataset_dir: data/ade
+output_dir: outputs/ade-mistral7b
+seed: 42
+prompt_formats:
+  - natural
+  - code
+n_icl_examples: 3
+max_length: 2048
+max_new_tokens: 192
+train_steps: 200
+learning_rate: 0.0002
+batch_size: 1
+gradient_accumulation_steps: 8
+lora_r: 16
+lora_alpha: 16
+lora_dropout: 0.0
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+load_in_4bit: true
+eval_limit: 300
