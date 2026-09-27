@@ -22,6 +22,10 @@ The default configuration uses the paper's strongest model family, `mistralai/Mi
 
 The notebook focuses on the no-rationale setting because the paper found rationale training usually reduced performance.
 
+## Comparative research report
+
+The [`report/`](report/) directory contains the reviewed LaTeX source and its compiled PDF. The report compares five NLP papers across their objectives, motivations, methodologies, datasets, evaluation metrics, findings, limitations, and reproducibility considerations. Direct paper evidence is distinguished from interpretive synthesis and independent critical analysis.
+
 ## Repository provenance
 
 The paper authors publish a reference repository at [TinfFoil/natcode-llm-kgc](https://github.com/TinfFoil/natcode-llm-kgc). It was consulted to confirm file formats and experimental details. That repository did not expose a software license when this implementation was prepared, so its source code is not redistributed here. This repository is an independent implementation based on the paper and documented interfaces.

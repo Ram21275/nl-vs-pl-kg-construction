@@ -1,0 +1,1328 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[11pt]{article}
+\usepackage[a4paper,left=2.7cm,right=2.7cm,top=2.6cm,bottom=2.7cm]{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=*,itemsep=0.25em,topsep=0.35em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.25em,topsep=0.35em}
+\definecolor{reportblue}{HTML}{17365D}
+\definecolor{reportgray}{HTML}{5B6573}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{reportgray}{Critical Review: Five NLP Research Papers}}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{15pt}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\hypersetup{
+  pdftitle={Critical Review of Five NLP Research Papers},
+  pdfsubject={Comparative review of five recent NLP studies},
+  hidelinks,
+  pdfcreator={LaTeX}}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{2.2cm}
+{\color{reportblue}\rule{\textwidth}{1.2pt}\par}
+\vspace{1.2cm}
+{\Huge\bfseries Critical Review of Five NLP Research Papers\par}
+\vspace{0.8cm}
+{\Large Objectives, Motivation, Methodologies, Datasets, Evaluation
+Metrics, Findings, and Limitations\par}
+\vspace{1.2cm}
+{\color{reportblue}\rule{0.72\textwidth}{0.6pt}\par}
+\vfill
+{\large Comparative Review\par}
+\vspace{0.35cm}
+{\large September 2026\par}
+\vspace*{1.8cm}
+\end{titlepage}
+
+\pagenumbering{roman}
+\hypersetup{pageanchor=true}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\section{Executive Synthesis}\label{executive-synthesis}
+
+Across the five papers, the most consistent result is that carefully
+chosen structure and supervision can matter more than raw model scale.
+SC-RAG structures evidence before self-correction; 2T-FT concentrates
+supervision on two positions; the topic-modeling framework reduces LLM
+calls through clustering; the KGC study shows that small LoRA-tuned
+models outperform much larger prompting baselines; and PLEM injects
+evidence semantics into relation prototypes. The collective lesson is
+not that larger models are unnecessary, but that task-specific inductive
+design often converts limited compute and data into stronger results.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Paper}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Core intervention}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Main evidence}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Primary caution}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+SC-RAG & Hybrid retrieval plus evidence-aware self-correction & Best or
+near-best results across varied RAG benchmarks & Single backbone and
+task-specific tuning limit generality \\
+2T-FT & Loss on first response and first EOS tokens & \textgreater90\%
+shorter reported training time than LoRA full-token supervision &
+Depends on costly pseudo-label extraction and is evaluated mainly with
+greedy decoding \\
+Efficient topic modeling & PDDP clusters plus five exemplars per cluster
+& About eight minutes across five corpora with strong alignment &
+Generator and evaluator share an LLM, creating circularity risk \\
+Natural vs programming language KGC & Matched LoRA fine-tuning under
+natural and Python-style formats & Roughly 15-21 absolute F1 points over
+CodeKGC & No validation inference and strict exact-string scoring
+complicate interpretation \\
+PLEM & Evidence matching during prototype learning & Average Macro F1
+gain of 1.23 points across two benchmarks & Requires evidence
+annotations and retains weak cross-domain performance \\
+\end{longtable}
+}
+
+\subsection{Review Method and Evidence Attribution}\label{review-method-and-evidence-attribution}
+
+The review distinguishes direct evidence from interpretation and
+independent critique. This separation prevents reviewer judgments from
+being mistaken for claims made by the original authors:
+
+\begin{itemize}
+\item
+  \textbf{Paper evidence} denotes a point stated directly in the paper,
+  including author-acknowledged limitations and future-work directions.
+\item
+  \textbf{Interpretive synthesis} denotes a close interpretation
+  supported by the design, results, or discussion but not presented as a
+  formal author claim.
+\item
+  \textbf{Critical analysis} denotes an independently reasoned
+  limitation, risk, or implication and should not be attributed to the
+  paper's authors.
+\end{itemize}
+
+\clearpage
+\section{Towards Evidence-Aware Retrieval-Augmented Generation via
+Self-Corrective
+Chain-of-Thought}\label{towards-evidence-aware-retrieval-augmented-generation-via-self-corrective-chain-of-thought}
+
+\textbf{Citation.} Li, Y., Ke, W., Liu, J., Wang, P., Liu, J., and He,
+Y. Information Processing and Management 63, 104369, 2026. DOI
+10.1016/j.ipm.2025.104369.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Summary}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Objective & Resolve conflicts between retrieved external evidence and
+static parametric knowledge without sacrificing inference efficiency. \\
+Method & SC-RAG: hybrid semantic/aspect retrieval, LoRA fine-tuning, and
+a one-step evidence-aware self-corrective chain of thought. \\
+Data & LaMP, HotpotQA, MMLU-Med, LegalBench-RAG, and CodeRAG-Bench. \\
+Evaluation & Accuracy, F1, MAE, RMSE, ROUGE-1/L, Pass@1, Precision@k,
+Recall@k, time, and significance testing. \\
+Headline finding & Reported gains range from 1.0\% to 30.3\%, with
+inference-time reductions up to 14.3\%. \\
+\end{longtable}
+}
+
+\subsection{Objective and Research
+Questions}\label{objective-and-research-questions}
+
+\textbf{Paper evidence.} The paper defines its objective in Section 3.3: develop SC-RAG
+to reconcile interior-exterior knowledge conflicts while improving
+accuracy and factual coherence without extra training data or
+inefficient iterative retrieval. The five experimental questions test
+overall performance, the separate value of evidence extraction and
+self-corrective CoT, the advantage over conventional CoT, sensitivity to
+retrieval count and hybrid weight, and whether generated self-correction
+exceeds a fixed template.
+
+\subsection{Motivation}\label{motivation}
+
+\textbf{Paper evidence.} Standard RAG can retrieve current information that conflicts
+with an LLM\textquotesingle s older parametric knowledge.
+Parameter-first methods may require a separate evaluator, while
+context-first methods repeatedly retrieve and regenerate, increasing
+latency. The authors aim to retain the model\textquotesingle s own
+reasoning capacity, obtain finer token-level evidence, and perform a
+single evidence-aware correction step (pp. 2-5).
+
+\textbf{Interpretive synthesis.} The work is also motivated by controllability: a system
+that exposes the evidence used to revise an answer provides a clearer
+operational story than unstructured self-correction, even though the
+paper does not establish full explanation faithfulness.
+
+\subsection{Methodology}\label{methodology}
+
+\begin{quote}
+\textbf{1.} Retrieve candidate documents with Contriever and compute
+semantic relevance.
+
+\textbf{2.} Use an unsupervised attention-based aspect retriever to
+identify fine-grained aspect terms and combine the two retrieval signals
+using weight alpha.
+
+\textbf{3.} Select supporting documents and evidence tokens, with four
+retrieved documents and five aspect terms per sentence in the reported
+setup.
+
+\textbf{4.} LoRA-fine-tune Llama-3.1-8B-Instruct to produce
+self-corrective reasoning conditioned on the preliminary answer and
+evidence.
+
+\textbf{5.} Generate the final response in one correction pass rather
+than an iterative retrieve-generate loop.
+\end{quote}
+
+\subsection{Datasets}\label{datasets}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Dataset}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Task and scale stated in the paper}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+LaMP & Seven personalization tasks; LaMP-6 unavailable and omitted;
+individual tasks contain roughly 6K-20K questions. \\
+HotpotQA & Multi-hop question answering; approximately 80K questions in
+the experimental description. \\
+MMLU-Med & Medical multiple-choice questions; 1,089 questions. \\
+LegalBench-RAG & Four legal retrieval datasets; 6,858 samples. \\
+CodeRAG-Bench & 9,000 code tasks and a 25-million-document retrieval
+datastore. \\
+\end{longtable}
+}
+
+\textbf{Paper evidence.} For these benchmarks, the authors randomly designate 20\% of
+training samples as the test set and construct fine-tuning examples with
+their self-correction template (Section 5.1).
+
+\subsection{Evaluation Metrics}\label{evaluation-metrics}
+
+\begin{itemize}
+\item
+  LaMP classification: accuracy, F1, mean absolute error, and root mean
+  square error as appropriate to each task.
+\item
+  LaMP generation: ROUGE-1 and ROUGE-L.
+\item
+  HotpotQA: answer F1. MMLU-Med: accuracy. CodeRAG-Bench: Pass@1.
+\item
+  LegalBench-RAG: Precision@k and Recall@k for k = 1, 2, 4, and 8.
+\item
+  Efficiency: inference time; reliability: five executions per method
+  and significance tests reported in the appendix.
+\end{itemize}
+
+\subsection{Findings}\label{findings}
+
+\begin{itemize}
+\item
+  \textbf{Paper evidence.} SC-RAG is best on most reported benchmarks and improves over
+  baselines by up to 19.7\% on LaMP-1, 30.3\% on LaMP-2, and 1.7\% on
+  LaMP-3 (Tables 1-2).
+\item
+  \textbf{Paper evidence.} Removing evidence extraction reduces performance by as much
+  as 9.9\% on LaMP-2 and 6.2 points on HotpotQA; removing
+  self-correction produces still larger reductions (Table 3).
+\item
+  \textbf{Paper evidence.} Parameter-first baselines are stronger on several QA tasks,
+  whereas context-first systems can be stronger for generation; SC-RAG
+  attempts to combine their benefits.
+\item
+  \textbf{Paper evidence.} Four supporting documents provide the best observed
+  performance-efficiency balance, and the optimal semantic/aspect
+  mixture is task dependent.
+\item
+  \textbf{Paper evidence.} The method reduces inference time by up to 14.3\% relative
+  to selected iterative baselines while avoiding a separate trained
+  evaluator.
+\end{itemize}
+
+\subsection{Limitations}\label{limitations}
+
+\textbf{Limitations acknowledged by the authors.}
+
+\begin{itemize}
+\item
+  Specialized medical, legal, and technical language may exceed the
+  hybrid retriever\textquotesingle s ability to identify fine-grained
+  evidence unless the corpus and retriever are adapted.
+\item
+  Self-correction can change an initially correct answer into an
+  incorrect one; the authors propose evidence thresholds and a fallback
+  that retains the original response under ambiguity.
+\item
+  The hybrid weight alpha is manually selected, and Contriever remains
+  frozen while the LLM is tuned. The authors identify adaptive weighting
+  and end-to-end retriever training as future work.
+\end{itemize}
+
+\textbf{Additional critical observations.}
+
+\begin{itemize}
+\item
+  Only one 8B backbone is evaluated, so improvements may depend on
+  Llama-3.1-8B-Instruct rather than the framework alone.
+\item
+  The paper selects an optimal retrieval weight for each task but does
+  not clearly isolate a validation-only selection protocol;
+  task-specific tuning could make test results optimistic.
+\item
+  Creating test sets from training partitions weakens comparability with
+  standard benchmark test protocols and requires especially careful
+  leakage controls.
+\item
+  The self-corrective rationale is treated as useful reasoning, but no
+  faithfulness or human evidence-grounding study establishes that the
+  textual rationale reflects the model\textquotesingle s actual decision
+  process.
+\item
+  The implementation requires an 80 GB A100 for fine-tuning, which
+  qualifies the accessibility claim even though inference is more
+  efficient than iterative baselines.
+\item
+  Table 4 contains a visually anomalous Madam-RAG Precision@8 value of
+  0.799 amid values near 0.1; this should be checked against code or
+  corrected results before reuse.
+\end{itemize}
+
+\subsection{Reproducibility
+Assessment}\label{reproducibility-assessment}
+
+Moderate. The backbone, optimizer, learning rate, batch size, retriever,
+number of documents, aspect count, and GPU are reported. Reproduction
+would still require the complete data-construction code, exact alpha
+selection procedure, templates, and baseline versions. Evidence anchors:
+Sections 3.3-5.5, Tables 1-4, and Sections 7-8.
+
+\clearpage
+\section{2T-FT: Two-Token Fine-Tuning Improves Zero-Shot Performance
+With Minimal
+Training}\label{t-ft-two-token-fine-tuning-improves-zero-shot-performance-with-minimal-training}
+
+\textbf{Citation.} Neto, P. S., Dyonisio, J. D. S., Lemos, J. F. S. S.,
+Kühne, F., Guerra, R. S., and Drews Jr., P. L. J. Neural Computing and
+Applications 38, article 321, 2026. DOI 10.1007/s00521-026-12052-9.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Summary}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Objective & Improve greedy-decoding reasoning by fine-tuning only the
+first answer token and first EOS token of implicit CoT paths. \\
+Method & CoT-Decoding, BERT answer-span extraction, pseudo-label
+selection, and two-position loss masking implemented with LoRA
+adapters. \\
+Data & GSM8K, MultiArith, SVAMP, plus nine out-of-distribution reasoning
+benchmarks. \\
+Evaluation & Exact-match accuracy, mean and standard deviation across
+three seeds, training time, supervised-token percentage, and task
+generalization. \\
+Headline finding & Phi-2 gains 22.7 points on MultiArith, 9.0 on GSM8K,
+and 2.3 on SVAMP while training time falls by more than 90\%. \\
+\end{longtable}
+}
+
+\subsection{Objective and Motivation}\label{objective-and-motivation}
+
+\textbf{Paper evidence.} The paper seeks to transfer reasoning paths already present in
+top-k decoding into ordinary greedy generation without hand-written CoT
+prompts or full-response supervision. The authors hypothesize that the
+first response token selects a reasoning trajectory and that the first
+EOS token stabilizes termination (Sections 1 and 3.2).
+
+\textbf{Interpretive synthesis.} The method reframes fine-tuning as behavioral routing
+rather than knowledge acquisition: it attempts to make the model enter
+an existing reasoning basin rather than teach every reasoning token.
+
+\subsection{Methodology}\label{methodology-1}
+
+\begin{quote}
+\textbf{1.} For each question, branch on the top k = 10 first-token
+alternatives and greedily decode each path.
+
+\textbf{2.} Extract candidate answers with a BERT model rather than
+dataset-specific regular expressions.
+
+\textbf{3.} Use self-consistency aggregation and confidence to select an
+implicit CoT response as the pseudo-label.
+
+\textbf{4.} Construct a loss mask that supervises only the first
+response token and the first EOS or padding token.
+
+\textbf{5.} Train a LoRA adapter and compare it with LoRA full-token
+fine-tuning under matched models and datasets.
+
+\textbf{6.} Evaluate the resulting model with greedy decoding, so
+inference no longer needs the k-path search.
+\end{quote}
+
+\subsection{Datasets and Models}\label{datasets-and-models}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Group}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Resources}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Primary arithmetic & GSM8K, MultiArith, and SVAMP. \\
+Generalization & ARC Easy, ARC Challenge, LogiQA, GPQA, PIQA, BBH,
+ETHICS, MuTual, and OpenBookQA. \\
+Models & Phi-2, Qwen2-1.5B, and Mistral-7B-v0.1 base models. \\
+Generation limits & Maximum 300 new tokens; maximum input length 512;
+standard QA format. \\
+\end{longtable}
+}
+
+\subsection{Evaluation Metrics}\label{evaluation-metrics-1}
+
+\begin{itemize}
+\item
+  Exact-match accuracy under greedy decoding for arithmetic tasks.
+\item
+  Mean and standard deviation across three random seeds.
+\item
+  Percentage of supervised response tokens and wall-clock training time.
+\item
+  Pseudo-label exact-match correctness on 100 sampled instances per
+  dataset.
+\item
+  lm-eval-harness accuracy for the out-of-distribution reasoning suite.
+\item
+  Ablations over token positions and controlled pseudo-label correctness
+  levels.
+\end{itemize}
+
+\subsection{Findings}\label{findings-1}
+
+\begin{itemize}
+\item
+  \textbf{Paper evidence.} On Phi-2, 2T-FT improves GSM8K from 27.7 to 36.7, MultiArith
+  from 61.7 to 84.4, and SVAMP from 48.0 to 50.3 exact match (Table 7).
+\item
+  \textbf{Paper evidence.} On Qwen2-1.5B, MultiArith rises from 43.3 to 75.0; on
+  Mistral-7B-v0.1 it rises from 14.3 to 38.33.
+\item
+  \textbf{Paper evidence.} Mean training time drops from 1 h 15 m to 6 m on Phi-2, 52 m
+  to 4 m on Qwen2-1.5B, and 1 h 53 m to 11 m on Mistral (Table 5).
+\item
+  \textbf{Paper evidence.} Token-position ablation shows that first-token plus EOS
+  supervision has the best accuracy-stability trade-off; EOS-only,
+  random-token, and answer-span masks perform poorly (Table 12).
+\item
+  \textbf{Paper evidence.} 2T-FT is comparatively robust to noisy pseudo-labels, but
+  gains across non-arithmetic reasoning categories are not uniform.
+\end{itemize}
+
+\subsection{Limitations}\label{limitations-1}
+
+\textbf{Limitations acknowledged by the authors.}
+
+\begin{itemize}
+\item
+  Large training sets can produce overfitting and repetitive first-token
+  behavior.
+\item
+  The method may be poorly suited to code or programmatic solutions,
+  where early tokens do not summarize the full reasoning structure.
+\item
+  CoT-Decoding adds preprocessing cost and pipeline complexity, and
+  outcomes depend on extracted-path quality.
+\item
+  Cross-domain gains are inconsistent, and decoding strategies other
+  than greedy decoding are not systematically evaluated.
+\end{itemize}
+
+\textbf{Additional critical observations.}
+
+\begin{itemize}
+\item
+  The \textgreater90\% training-time claim excludes or separates the
+  cost of generating k implicit paths and running answer extraction;
+  end-to-end cost should include pseudo-label construction.
+\item
+  The method is tested on three model families and predominantly
+  short-answer reasoning tasks, so its effectiveness for long-form
+  factual, multilingual, or safety-critical outputs is uncertain.
+\item
+  A BERT extractor can introduce selection bias: reasoning paths that
+  are easy for the extractor to parse may dominate training even when
+  other valid forms exist.
+\item
+  Exact-match improvements do not establish reasoning faithfulness;
+  first-token steering may improve answer format or trajectory selection
+  without making intermediate reasoning causally valid.
+\item
+  Comparisons with Rho-1 are limited to one model and three arithmetic
+  datasets and do not equalize every training detail.
+\end{itemize}
+
+\subsection{Reproducibility
+Assessment}\label{reproducibility-assessment-1}
+
+Good. The paper provides code, model names, decoding limits, k, multiple
+seeds, detailed result tables, ablations, and configuration appendices.
+End-to-end runtime and data-generation storage costs should still be
+recorded in a replication. Evidence anchors: Sections 3-5 and Tables
+1-17.
+
+\clearpage
+\section{Large Language Models for Efficient Topic
+Modeling}\label{large-language-models-for-efficient-topic-modeling}
+
+\textbf{Citation.} Theocharopoulos, P. C., Anagnostou, P.,
+Georgakopoulos, S. V., Tasoulis, S. K., and Plagianakos, V. P. Neural
+Computing and Applications 37, 24421-24439, 2025. DOI
+10.1007/s00521-025-11593-9.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Summary}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Objective & Reduce time and energy for LLM-based topic modeling while
+preserving topic quality. \\
+Method & Sentence-BERT embeddings, PDDP divisive clustering, five random
+representatives per cluster, and Llama-3.1-70B topic generation. \\
+Data & BBC, 20 Newsgroups, scientific abstracts, E-commerce reviews, and
+U.S. congressional bills. \\
+Evaluation & LLM label alignment, TC, TD, AMI, ARI, MIS, harmonic
+purity, runtime, energy, and estimated cost. \\
+Headline finding & Roughly eight-minute runtimes, higher LLM alignment
+than BERTopic, and energy reductions up to 98\% versus document-wise LLM
+inference. \\
+\end{longtable}
+}
+
+\subsection{Objective and Motivation}\label{objective-and-motivation-1}
+
+\textbf{Paper evidence.} The paper aims to discover topics in large unlabeled corpora
+without submitting every document to an LLM. Its motivation combines
+scalability, operating cost, and environmental impact: cluster cheap
+semantic embeddings first, ask the LLM about a few representatives, and
+transfer that topic to the cluster (pp. 24421-24424).
+
+\textbf{Interpretive synthesis.} The method treats an LLM as a semantic labeler
+positioned after conventional representation and clustering rather than
+as the complete topic model. This modularity is the central efficiency
+mechanism.
+
+\subsection{Methodology}\label{methodology-2}
+
+\begin{quote}
+\textbf{1.} Clean text by removing HTML, whitespace artifacts,
+punctuation, numbers, stop words, and by lowercasing.
+
+\textbf{2.} Embed each document into 384 dimensions with Sentence-BERT
+all-MiniLM-L6-v2.
+
+\textbf{3.} Apply Principal Direction Divisive Partitioning through
+HiPart using PCA, at most 600 splits, and a minimum cluster size of 20.
+
+\textbf{4.} Randomly select five representative texts from each cluster.
+
+\textbf{5.} Prompt locally hosted Llama-3.1-70B-Instruct through vLLM to
+return one topic per cluster.
+
+\textbf{6.} Assign the cluster topic to every member and evaluate both
+topic alignment and computational efficiency over ten independent
+iterations.
+\end{quote}
+
+\subsection{Datasets}\label{datasets-1}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Dataset}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Scale and labels}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+BBC News & 2,225 articles across five topic areas. \\
+20 Newsgroups & 18,846 documents across 20 categories. \\
+Scientific abstracts & 20,006 abstracts from computer science,
+mathematics, physics, and statistics; sourced from Kaggle. \\
+E-commerce reviews & 50,425 texts across four product domains. \\
+Bills & 40,661 summaries from the 110th-114th U.S. Congresses with 21
+high-level topics. \\
+\end{longtable}
+}
+
+\subsection{Evaluation Metrics}\label{evaluation-metrics-2}
+
+\begin{itemize}
+\item
+  LLM-based topic alignment: Llama chooses the best ground-truth label
+  for each generated topic.
+\item
+  Topic quality: Topic Coherence and Topic Diversity.
+\item
+  Cluster-label agreement: Adjusted Mutual Information, Adjusted Rand
+  Index, Mutual Information Score, and Harmonic Purity.
+\item
+  Efficiency: elapsed seconds, measured kWh, percentage energy
+  reduction, and estimated electricity cost in euros.
+\item
+  Baselines: LLM one-by-one, BERTopic, and TopicGPT on a 7\% sample for
+  the latter comparison.
+\end{itemize}
+
+\subsection{Findings}\label{findings-2}
+
+\begin{itemize}
+\item
+  \textbf{Paper evidence.} LLM-alignment scores are 0.861 on BBC, 0.694 on Newsgroups,
+  0.820 on E-commerce, 0.784 on Papers, and 0.506 on Bills, all above
+  BERTopic (Table 1).
+\item
+  \textbf{Paper evidence.} The approach finishes in 473-518 seconds across all five
+  corpora, whereas one-by-one inference ranges from 2,950 to 74,417
+  seconds.
+\item
+  \textbf{Paper evidence.} The method obtains the strongest overall cluster agreement
+  on BBC, E-commerce, and Bills; BERTopic remains stronger on some
+  coherence and diversity metrics (Table 2).
+\item
+  \textbf{Paper evidence.} Reported energy savings reach 96-98\% on several large
+  datasets compared with one-by-one inference and 57-75\% against
+  BERTopic on four of five datasets.
+\item
+  \textbf{Paper evidence.} Simplifying 20 Newsgroups labels changes evaluation
+  materially, demonstrating that the LLM alignment score is sensitive to
+  label wording.
+\end{itemize}
+
+\subsection{Limitations}\label{limitations-2}
+
+\textbf{Limitations acknowledged by the authors.}
+
+\begin{itemize}
+\item
+  Quality and computational cost depend directly on the initial
+  clustering and its granularity.
+\item
+  Coarse clustering may collapse distinct topics; fine clustering
+  increases LLM calls and erodes the efficiency advantage.
+\item
+  A few random representatives may fail to capture outliers, small
+  subtopics, or heterogeneous clusters.
+\item
+  Maximum splits, cluster size, and exemplar count require empirical
+  adjustment; automatic selection remains future work.
+\end{itemize}
+
+\textbf{Additional critical observations.}
+
+\begin{itemize}
+\item
+  Llama-3.1-70B generates topics and also maps those topics to reference
+  labels. Shared model preferences can inflate alignment and reduce
+  evaluator independence.
+\item
+  Changing Newsgroups labels to broader terms improves scores but also
+  changes the target; the revised result should not be treated as
+  directly comparable to the original labels.
+\item
+  The LLM one-by-one baseline is more accurate on every dataset in Table
+  1, so the central result is an efficiency-quality trade-off rather
+  than unqualified state-of-the-art quality.
+\item
+  Two A100 80 GB GPUs and 256 GB RAM are substantial resources; the
+  framework reduces inference calls but does not by itself establish
+  accessibility on ordinary hardware.
+\item
+  Energy estimates cover measured execution but not model download,
+  model loading, infrastructure overhead, or embodied hardware
+  emissions.
+\item
+  Random exemplars introduce variance, yet the framework does not
+  compare random selection with medoids, centroids, diversity sampling,
+  or active selection.
+\end{itemize}
+
+\subsection{Reproducibility
+Assessment}\label{reproducibility-assessment-2}
+
+Moderate to good. Models, embeddings, clustering package, major
+hyperparameters, prompt, hardware, repeated runs, energy, and cost
+assumptions are reported. Strong reproduction would additionally require
+released preprocessing code, exact power measurement procedure, random
+seeds, and cluster counts per run. Evidence anchors: Sections 3-6,
+Tables 1-4, and Figures 1-5.
+
+\clearpage
+\section{Natural vs Programming Language in LLM Knowledge Graph
+Construction}\label{natural-vs-programming-language-in-llm-knowledge-graph-construction}
+
+\textbf{Citation.} Gajo, P., and Barrón-Cedeño, A. Information
+Processing and Management 62(5), 104195, 2025. DOI
+10.1016/j.ipm.2025.104195.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Summary}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Objective & Test whether small open-weight LLMs, model pretraining
+domain, prompt representation, rationale training, and model size affect
+RDF triple extraction. \\
+Method & LoRA-fine-tune 1B-70B natural-language and code-focused models
+with natural or Python-style prompts, with or without rationale. \\
+Data & CodeKGC subsets of ADE, CoNLL04, and SciERC. \\
+Evaluation & Strict complete-triple precision, recall, micro-F1,
+class-level analysis, attention analysis, size and LoRA-module
+ablations. \\
+Headline finding & The best tuned models outperform the strongest
+CodeKGC baselines in Table 4 by 17.0 F1 points on ADE, 20.9 on CoNLL04,
+and 14.9 on SciERC; prompt language matters little after tuning. \\
+\end{longtable}
+}
+
+\subsection{Objective and Research
+Questions}\label{objective-and-research-questions-1}
+
+\textbf{Paper evidence.} The study asks whether code-pretrained LLMs are better at
+structured extraction, whether Python-style prompts outperform
+natural-language prompts, whether explicit rationale improves joint
+entity and relation extraction, and whether small open-weight models can
+exceed closed GPT-3.5 CodeKGC baselines. It also studies model size and
+which LoRA modules matter (Sections 1, 4, and 5).
+
+\subsection{Motivation}\label{motivation-1}
+
+\textbf{Paper evidence.} Existing LLM-based KGC research often relies on large
+commercial APIs whose weights, training changes, and long-term
+availability are outside the researcher\textquotesingle s control. The
+authors pursue reproducibility, lower compute, transparency, and reduced
+third-party dependence through downloadable open-weight models and
+parameter-efficient tuning.
+
+\textbf{Interpretive synthesis.} The natural-versus-code comparison also tests a broader
+hypothesis: whether representational syntax supplies a meaningful
+structural prior after the model has already observed hundreds of
+supervised input-output pairs.
+
+\subsection{Methodology}\label{methodology-3}
+
+\begin{quote}
+\textbf{1.} Construct natural-language and Python-style versions of the
+same RDF triple-extraction task, with three in-context demonstrations.
+
+\textbf{2.} Optionally require a rationale listing candidate entities
+and relations before the final triples.
+
+\textbf{3.} LoRA-tune natural-language models and code models over three
+datasets for 200 steps with rank and alpha 16, batch size 8, learning
+rate 2e-4, five warm-up steps, and AdamW.
+
+\textbf{4.} Test base instruction models, tuned 7-8B models, 1B and 3B
+variants, and 70B variants; the full study covers 175 evaluated model
+conditions.
+
+\textbf{5.} Parse predicted triples and compute strict complete-triple
+micro metrics averaged over three testing runs.
+
+\textbf{6.} Analyze prompt effects, rationale effects, relation classes,
+attention patterns, model size, and LoRA target modules.
+\end{quote}
+
+\subsection{Datasets}\label{datasets-2}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Dataset}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Train and test documents}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Entity and relation structure}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ADE & 2,562 / 300 & Drug and disease entities; one adverseEffect
+relation in the selected subset. \\
+CoNLL04 & 922 / 288 & Three entity types and five relations over news
+text. \\
+SciERC & 1,366 / 397 & Six entity types, seven positive relations, and a
+none class over scientific text. \\
+\end{longtable}
+}
+
+\textbf{Paper evidence.} The study uses the same subsampled splits as CodeKGC to
+preserve baseline comparability. The authors rank SciERC as the most
+difficult because of technical language and many relation classes,
+CoNLL04 second, and ADE easiest because it has one relation type
+(Section 3 and Table 1).
+
+\subsection{Evaluation Metrics}\label{evaluation-metrics-3}
+
+\begin{itemize}
+\item
+  Strict true positive: head string, relation string, and tail string
+  must all match a reference triple exactly.
+\item
+  Micro precision, recall, and F1 aggregated over complete triples;
+  results averaged over three inference runs.
+\item
+  Per-relation F1 marginalized across models.
+\item
+  Qualitative error and attention analysis for rationale behavior.
+\item
+  Ablations for model size and LoRA query, key, value, attention-output,
+  and MLP targets.
+\end{itemize}
+
+\subsection{Findings}\label{findings-3}
+
+\begin{itemize}
+\item
+  \textbf{Paper evidence.} The strongest results are split across two
+  Mistral variants. Mistral-7B-Instruct-v0.3 reaches 0.812 on ADE with a
+  code prompt and 0.705 on CoNLL04 with a natural-language prompt,
+  whereas Mistral-7B-v0.3 reaches 0.396 on SciERC with either prompt
+  format; all three best conditions omit rationale (Table 4).
+\item
+  \textbf{Paper evidence.} Relative to the strongest CodeKGC value in
+  Table 4 for each dataset, these scores correspond to gains of 17.0,
+  20.9, and 14.9 absolute F1 points, respectively. The abstract reports
+  17.4, 19.7, and 15.5 points; the difference is retained here as an
+  internal reporting discrepancy in the source paper.
+\item
+  \textbf{Paper evidence.} After fine-tuning, natural and code prompt formats yield
+  similar outcomes; before fine-tuning, code prompts can help general
+  chat models more noticeably.
+\item
+  \textbf{Paper evidence.} Rationale training reduces performance in nearly every tuned
+  setting. Attention visualizations suggest that entity and relation
+  lists disperse attention toward redundant prompt content.
+\item
+  \textbf{Paper evidence.} Small tuned models outperform 70B models under the same
+  1,600-sample and 200-step budget; the authors argue that larger models
+  require more data to be steered effectively.
+\item
+  \textbf{Paper evidence.} Under the fixed 200-step, low-data recipe,
+  full LoRA across attention and MLP projections outperforms full
+  fine-tuning and restricted-module adapters; updating value projections
+  is particularly important (Table 11).
+\end{itemize}
+
+\subsection{Limitations}\label{limitations-3}
+
+\textbf{Limitations acknowledged or directly discussed by the authors.}
+
+\begin{itemize}
+\item
+  The largest models could not be tuned at 16-bit or 8-bit precision and
+  were trained with 4-bit QLoRA; the same limited training budget is
+  probably insufficient for 70B models.
+\item
+  DeepSeek Coder\textquotesingle s 4K context restricts experiments with
+  many in-context examples.
+\item
+  The compute required for 168 tuned models and repeated testing leads
+  the authors to evaluate directly on the test set without validation
+  inference.
+\item
+  The study does not claim that rationale text is universally harmful;
+  its result is specific to the candidate-list rationale design and
+  these extraction tasks.
+\end{itemize}
+
+\textbf{Additional critical observations.}
+
+\begin{itemize}
+\item
+  Using the test set without a validation inference stage creates
+  selection risk, especially when interpreting the chosen 200-step
+  checkpoint, prompt design, and many ablations.
+\item
+  The natural and code prompts differ in schema length, tokenization,
+  system messages, and output grammar, so the comparison is not a
+  perfectly isolated test of \textquotesingle language\textquotesingle{}
+  alone.
+\item
+  Strict exact-string matching is reproducible but penalizes equivalent
+  aliases and harmless formatting while missing semantic correctness;
+  both strict and normalized metrics would be more informative.
+\item
+  Three small, subsampled datasets and English-only prompts limit
+  conclusions about broad knowledge graph construction, long documents,
+  multilingual text, and large relation inventories.
+\item
+  The study tests many conditions but generally omits uncertainty
+  intervals from main tables; multiple comparisons increase the chance
+  of overinterpreting small differences.
+\item
+  The article links to public code, but exact reproduction still depends
+  on external implementation and environment details that are not fully
+  specified in the paper.
+\end{itemize}
+
+\subsection{Proposed Replication Configuration}
+\label{proposed-replication-configuration}
+
+ADE is the most practical starting point for a controlled replication:
+it is the smallest dataset used in the study, contains one relation
+type, and has 300 test documents. A resource-conscious protocol uses
+Mistral-7B-Instruct-v0.3 with 4-bit LoRA, three demonstrations, matched
+natural-language and Python-style outputs, greedy decoding, and strict
+micro-F1. Generated Python-style output should be parsed as data and
+must never be executed.
+
+\subsection{Reproducibility
+Assessment}\label{reproducibility-assessment-3}
+
+Moderate. The paper provides extensive hyperparameters, prompt
+appendices, data links, class counts, model names, ablations, and a
+public repository. Reproduction is weakened by missing validation
+inference, incomplete uncertainty reporting, and dependence on external
+implementation details. Evidence anchors: Sections 3-6, Tables 1-11,
+and Appendices A-D.
+
+\clearpage
+\section{PLEM: Prototype Learning With Evidence Match for Improving
+Few-Shot Document-Level Relation
+Extraction}\label{plem-prototype-learning-with-evidence-match-for-improving-few-shot-document-level-relation-extraction}
+
+\textbf{Citation.} Pan, D., Sun, Y., Xu, B., Li, J., Yang, Z., Luo, L.,
+Lin, H., and Wang, J. IEEE Transactions on Audio Speech and Language
+Processing 33, 2505-2514, 2025. DOI 10.1109/TASLPRO.2025.3578781.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Summary}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Objective & Improve few-shot document-level relation prototypes by
+matching entity-pair representations to evidence sentences. \\
+Method & Metric meta-learning with task-specific relation, NOTA, MATCH,
+and UNMATCH prototypes plus joint relation and evidence losses. \\
+Data & FREDo and ReFREDo in 1-DOC and 3-DOC, in-domain and
+DocRED-to-SciERC cross-domain settings. \\
+Evaluation & Macro F1 over five random seeds, ablations, hyperparameter
+sensitivity, support-count analysis, and a limited LLM comparison. \\
+Headline finding & Average improvement of 1.17 Macro F1 points on FREDo
+and 1.29 on ReFREDo over RAPL, or 1.23 overall. \\
+\end{longtable}
+}
+
+\subsection{Objective and Motivation}\label{objective-and-motivation-2}
+
+\textbf{Paper evidence.} Few-shot document-level relation extraction must generalize to
+unseen relation types from one or three support documents. Earlier
+metric methods aggregate whole-document and entity-pair context into
+relation prototypes even though only a few sentences provide decisive
+evidence. PLEM aims to suppress irrelevant context and adapt evidence
+semantics to the relation types in each episode (Introduction and
+Section IV).
+
+\textbf{Interpretive synthesis.} The paper views evidence supervision as representation
+shaping rather than merely evidence retrieval: the auxiliary task is
+valuable because it changes the geometry of relation prototypes used by
+the main classifier.
+
+\subsection{Methodology}\label{methodology-4}
+
+\begin{quote}
+\textbf{1.} Encode support and query documents with BERT-base and derive
+entity-pair contextual representations.
+
+\textbf{2.} Construct relation prototypes from support triples and
+task-specific NOTA prototypes for non-relation cases.
+
+\textbf{3.} Create learnable MATCH and UNMATCH evidence prototypes and
+adapt them with episode-specific relation semantics.
+
+\textbf{4.} Score sentences as evidence or non-evidence and use
+evidence-weighted information to improve the relation representation.
+
+\textbf{5.} Jointly optimize relation classification and evidence
+matching in 50,000 sampled meta-learning episodes.
+
+\textbf{6.} Evaluate on unseen relation categories in 1-DOC and 3-DOC,
+in-domain and cross-domain episodes.
+\end{quote}
+
+\subsection{Datasets}\label{datasets-3}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Benchmark}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Construction and evaluation}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+FREDo in-domain & DocRED relation types split into 62 train, 16
+development, and 18 test types; 15K test episodes. \\
+FREDo cross-domain & Train on DocRED and evaluate 3K episodes over
+SciERC. \\
+ReFREDo in-domain & Uses Re-DocRED\textquotesingle s expanded 119,991
+relational facts with the same relation-type partition; 15K test
+episodes. \\
+ReFREDo cross-domain & Re-DocRED training with SciERC test episodes,
+matching FREDo\textquotesingle s cross-domain setup. \\
+\end{longtable}
+}
+
+\subsection{Evaluation Metrics}\label{evaluation-metrics-4}
+
+\begin{itemize}
+\item
+  Macro F1 across relation types, reported as mean and standard
+  deviation over five random seeds.
+\item
+  Early stopping based on development-set Macro F1.
+\item
+  Ablations for task-specific evidence prototypes, evidence matching,
+  and supervised-style evidence retrieval.
+\item
+  Sensitivity analysis for loss weight, task-specific mixture, and
+  number of evidence prototypes.
+\item
+  Performance stratified by the number of support relation instances.
+\item
+  Preliminary ChatGPT comparison on 1K sampled episodes per setting
+  because of cost and time constraints.
+\end{itemize}
+
+\subsection{Findings}\label{findings-4}
+
+\begin{itemize}
+\item
+  \textbf{Paper evidence.} PLEM exceeds RAPL by an average 1.17 Macro F1 points on
+  FREDo and 1.29 on ReFREDo across settings (Table II).
+\item
+  \textbf{Paper evidence.} Removing evidence matching reduces Macro F1 by 2.33 points
+  in-domain and 1.98 cross-domain (Table III).
+\item
+  \textbf{Paper evidence.} Task-specific evidence prototypes help in-domain performance
+  but have almost no effect cross-domain, implying that episode-specific
+  evidence semantics do not transfer cleanly.
+\item
+  \textbf{Paper evidence.} Three support documents outperform one, but gains are not
+  monotonic with the number of individual support instances.
+\item
+  \textbf{Paper evidence.} Supervised DocRE baselines perform poorly in few-shot
+  settings because they overfit known relations; the metric-learning
+  design better handles unseen categories.
+\item
+  \textbf{Paper evidence.} GPT-3.5 and GPT-4o improve with three demonstrations but
+  remain below metric-based approaches in the sampled comparison; the
+  authors explicitly call the comparison not entirely fair.
+\end{itemize}
+
+\subsection{Limitations}\label{limitations-4}
+
+\textbf{Attribution note.} The paper has no dedicated limitations
+section. The first three constraints below are directly acknowledged in
+the experiments and case analysis; the remaining items are independent
+critical observations.
+
+\begin{itemize}
+\item
+  \textbf{Interpretive synthesis.} Cross-domain performance remains substantially below
+  in-domain performance, and improved Re-DocRED annotation does not
+  resolve domain adaptation.
+\item
+  \textbf{Interpretive synthesis.} Metric prototypes can be incomplete when a relation
+  has only one support instance, causing all tested models to miss
+  relevant triples in the case study.
+\item
+  \textbf{Interpretive synthesis.} Evidence annotations can be missing or incorrect;
+  excessive evidence-loss weighting introduces noise and degrades the
+  relation prototype.
+\item
+  \textbf{Additional critical observations.} PLEM depends on evidence sentence annotations in
+  the support data, an additional labeling burden that weakens the
+  low-resource premise.
+\item
+  \textbf{Additional critical observations.} Both benchmarks are episode constructions based
+  mainly on DocRED/Re-DocRED and SciERC; broader domains, languages, and
+  document genres are not tested.
+\item
+  \textbf{Additional critical observations.} The BERT-base encoder and fixed training recipe
+  leave open whether gains persist with stronger document encoders or
+  modern long-context models.
+\item
+  \textbf{Additional critical observations.} Macro F1 is appropriate for relation balance, but
+  reporting micro F1, calibration, NOTA error rates, and evidence-match
+  quality would better diagnose behavior.
+\item
+  \textbf{Additional critical observations.} The sampled LLM comparison uses prompt designs
+  and inference paradigms that are not equivalent to PLEM and should not
+  support a broad conclusion about LLM inferiority.
+\end{itemize}
+
+\subsection{Reproducibility
+Assessment}\label{reproducibility-assessment-4}
+
+Good on training details: the paper reports encoder, optimizer, learning
+rate, warm-up, batch size, clipping, 50K episodes, early stopping,
+hyperparameters, GPU, and five seeds. Full reproduction still depends on
+the precise benchmark episode sampler, evidence annotations, and
+preprocessing pipeline. Evidence anchors: Sections II-VI, Tables I-V,
+and Figures 2-4.
+
+\clearpage
+\section{Cross-Paper Synthesis and Replication Design}
+\label{cross-paper-synthesis-and-replication-design}
+
+\subsection{What the Five Studies Agree
+On}\label{what-the-five-studies-agree-on}
+
+\begin{itemize}
+\item
+  Structure beats indiscriminate scale. Evidence selection, cluster
+  representatives, selective token loss, and prototypes all concentrate
+  computation on a smaller decision-relevant subset.
+\item
+  Open or smaller models can be competitive when supervision and task
+  formulation are strong, but the most efficient methods often shift
+  cost into preprocessing, annotation, or model-specific infrastructure.
+\item
+  Auxiliary reasoning is not automatically beneficial. The KGC rationale
+  hurts most conditions, while SC-RAG benefits from evidence-conditioned
+  self-correction; the difference is whether added text supplies
+  decision-relevant evidence or redundant tokens.
+\item
+  Evaluation design is a major source of uncertainty. LLM-as-judge
+  circularity, strict string matching, sampled LLM comparisons, custom
+  test partitions, and pseudo-label extractors can materially shape
+  reported conclusions.
+\item
+  Cross-domain generalization remains weaker than in-domain performance
+  in every paper where it is tested directly or indirectly.
+\end{itemize}
+
+\subsection{Recommended Replication}\label{recommended-replication}
+
+The natural-versus-programming-language KGC paper is the best
+replication target among the five studies because it has a public data
+interface, a clear two-condition comparison, a deterministic evaluation
+metric, and a feasible single-dataset experiment. ADE is the recommended
+first dataset because it has one relation type, only 300 test documents,
+and the strongest paper results, reducing experimental ambiguity before
+moving to CoNLL04 or SciERC.
+
+{\footnotesize
+\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\textbf{Decision}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Recommended setting}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\textbf{Reason}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Dataset & ADE CodeKGC split & Smallest and simplest paper-used
+benchmark; 442 test triples in the selected split. \\
+Model & Mistral-7B-Instruct-v0.3 & Strongest family in the paper and
+feasible with 4-bit LoRA on Kaggle GPU. \\
+Conditions & Natural-language list vs Python-style Triple output & Keeps
+the semantic task constant while testing representation format. \\
+Training & 200 steps, rank/alpha 16, LR 2e-4, three demonstrations &
+Matches the central paper configuration while using gradient
+accumulation for limited VRAM. \\
+Metric & Strict exact complete-triple micro P/R/F1 & Directly comparable
+with the paper; add normalized metrics only as secondary analysis. \\
+Seeds & At least three & A single Kaggle run is a smoke test, not a
+stable replication. \\
+\end{longtable}
+\normalsize
+}
+
+\subsection{Reproduction Package Validation}
+\label{reproduction-package-validation}
+
+\begin{itemize}
+\item
+  Seven unit tests pass for data loading, prompt construction, safe
+  parsing, and strict micro-F1.
+\item
+  An end-to-end deterministic smoke test completed on the ADE test
+  split: 300 documents and 442 gold triples were serialized and
+  re-parsed correctly in both formats.
+\item
+  The Kaggle notebook validates inputs before downloading or training a
+  model and saves per-example predictions plus metrics for both
+  conditions.
+\item
+  The code-output parser never executes generated Python.
+\item
+  The completed checks validate data handling and evaluation logic, not
+  model quality. A full 7B GPU fine-tuning run remains necessary before
+  reporting replicated performance against the paper.
+\end{itemize}
+
+\subsection{Scope and Attribution Note}\label{scope-and-attribution-note}
+
+Factual descriptions derive from the five reviewed papers. Statements
+identified as interpretive synthesis or critical analysis are reviewer
+judgments rather than claims made by the original authors. These labels
+should be retained whenever such observations are cited or reused.
+
+\end{document}

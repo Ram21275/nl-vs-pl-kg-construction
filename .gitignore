@@ -10,3 +10,7 @@ outputs/
 models/
 data/ade/
 .env
+*.aux
+*.log
+*.out
+*.toc
