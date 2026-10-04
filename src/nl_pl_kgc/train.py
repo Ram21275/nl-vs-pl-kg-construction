@@ -50,10 +50,36 @@ def _sequence_length_kwargs(sft_config_class: type, max_length: int) -> dict[str
     )
 
 
+def _validate_4bit_backend(torch: Any) -> None:
+    """Fail before model download when bitsandbytes cannot run NF4 on the GPU."""
+    if not torch.cuda.is_available():
+        raise RuntimeError(
+            "Four-bit training requires a CUDA GPU. Select a Kaggle GPU accelerator "
+            "and restart the session."
+        )
+    try:
+        import bitsandbytes as bnb
+
+        dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        probe = torch.zeros(256, device="cuda", dtype=dtype)
+        bnb.functional.quantize_4bit(probe, quant_type="nf4")
+    except Exception as exc:
+        raise RuntimeError(
+            "The bitsandbytes CUDA NF4 backend is unavailable. Reinstall the Kaggle "
+            "requirements (which pin bitsandbytes 0.50.2 for CUDA 12.8), then rerun "
+            "training in a fresh subprocess."
+        ) from exc
+    finally:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+
 def train_adapter(config: dict[str, Any], prompt_format: PromptFormat) -> Path:
     """Train one paper-style LoRA adapter for natural or code prompts."""
     stack = _load_training_stack()
     torch = stack["torch"]
+    if config.get("load_in_4bit", True):
+        _validate_4bit_backend(torch)
     dataset_dir = Path(config["dataset_dir"])
     train_examples = load_examples(dataset_dir / "train_triples.json")
     tokenizer = stack["AutoTokenizer"].from_pretrained(config["model_name"])
@@ -139,6 +165,7 @@ def evaluate_model(config: dict[str, Any], prompt_format: PromptFormat, adapter_
     """Evaluate an adapter with the paper's strict full-triple micro metric."""
     stack = _load_training_stack()
     torch = stack["torch"]
+    _validate_4bit_backend(torch)
     from peft import PeftModel
 
     dataset_dir = Path(config["dataset_dir"])
