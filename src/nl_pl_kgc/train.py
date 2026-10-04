@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import json
 import random
 from pathlib import Path
@@ -34,6 +35,19 @@ def _load_training_stack():
         "SFTConfig": SFTConfig,
         "SFTTrainer": SFTTrainer,
     }
+
+
+def _sequence_length_kwargs(sft_config_class: type, max_length: int) -> dict[str, int]:
+    """Use the sequence-length field supported by the installed TRL release."""
+    parameters = inspect.signature(sft_config_class).parameters
+    if "max_length" in parameters:
+        return {"max_length": max_length}
+    if "max_seq_length" in parameters:
+        return {"max_seq_length": max_length}
+    raise RuntimeError(
+        "The installed TRL SFTConfig exposes neither max_length nor "
+        "max_seq_length. Install the versions in requirements-kaggle.txt."
+    )
 
 
 def train_adapter(config: dict[str, Any], prompt_format: PromptFormat) -> Path:
@@ -89,7 +103,7 @@ def train_adapter(config: dict[str, Any], prompt_format: PromptFormat) -> Path:
     destination.mkdir(parents=True, exist_ok=True)
     args = stack["SFTConfig"](
         output_dir=str(destination),
-        max_length=int(config["max_length"]),
+        **_sequence_length_kwargs(stack["SFTConfig"], int(config["max_length"])),
         max_steps=int(config["train_steps"]),
         per_device_train_batch_size=int(config["batch_size"]),
         gradient_accumulation_steps=int(config["gradient_accumulation_steps"]),
