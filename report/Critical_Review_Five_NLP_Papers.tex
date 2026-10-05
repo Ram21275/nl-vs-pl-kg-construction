@@ -1300,8 +1300,9 @@ stable replication. \\
 
 \begin{itemize}
 \item
-  Seven unit tests pass for data loading, prompt construction, safe
-  parsing, and strict micro-F1.
+  Nine unit tests pass for data loading, prompt construction, safe
+  parsing, strict micro-F1, and compatibility across TRL sequence-length
+  configuration names.
 \item
   An end-to-end deterministic smoke test completed on the ADE test
   split: 300 documents and 442 gold triples were serialized and
@@ -1313,9 +1314,9 @@ stable replication. \\
 \item
   The code-output parser never executes generated Python.
 \item
-  The completed checks validate data handling and evaluation logic, not
-  model quality. A full 7B GPU fine-tuning run remains necessary before
-  reporting replicated performance against the paper.
+  A complete 7B QLoRA run was subsequently executed for both prompt
+  conditions on the ADE split. The observed results and their scope are
+  reported in the following section.
 \end{itemize}
 
 \subsection{Scope and Attribution Note}\label{scope-and-attribution-note}
@@ -1324,5 +1325,150 @@ Factual descriptions derive from the five reviewed papers. Statements
 identified as interpretive synthesis or critical analysis are reviewer
 judgments rather than claims made by the original authors. These labels
 should be retained whenever such observations are cited or reused.
+
+\clearpage
+\section{Implementation and Single-Dataset Experimental Results}
+\label{implementation-and-single-dataset-experimental-results}
+
+\subsection{Implementation Scope and Repository}
+\label{implementation-scope-and-repository}
+
+The natural-versus-programming-language KGC study was implemented as a
+Kaggle-ready Python package and evaluated on the ADE dataset. The
+implementation keeps the extraction task, model, data split,
+demonstrations, LoRA configuration, decoding policy, parser strictness,
+and evaluation metric fixed while changing the prompt and output
+representation. The natural-language condition produces JSON arrays of
+complete triples; the programming-language condition produces
+Python-style \texttt{Triple(head, relation, tail)} values inside a
+function return statement. Generated code is parsed as text and is never
+executed.
+
+The source code, configuration, tests, and Kaggle notebook are available
+in the public repository:
+
+\begin{center}
+\url{https://github.com/Ram21275/nl-vs-pl-kg-construction}
+\end{center}
+
+Dataset files, downloaded model weights, trained adapters, and generated
+predictions are excluded from version control because they have separate
+distribution terms or are run-specific artifacts. The repository
+documents the required file schema and regenerates predictions and
+metrics when the notebook is executed.
+
+\subsection{Experimental Configuration}
+\label{implementation-experimental-configuration}
+
+{
+\small
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.3000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.7000}}@{}}
+\toprule\noalign{}
+\textbf{Component} & \textbf{Implemented setting} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Dataset & ADE CodeKGC-style split: 2,563 training documents and 300 test
+documents. The strict evaluator counted 442 distinct gold triples after
+per-document set conversion. \\
+Model & \texttt{mistralai/Mistral-7B-Instruct-v0.3}. \\
+Prompt conditions & Natural-language JSON triples and Python-style
+\texttt{Triple} objects, each with three in-context demonstrations and no
+rationale. \\
+Fine-tuning & Four-bit NF4 QLoRA; 200 update steps; LoRA rank and alpha
+16; learning rate $2\times10^{-4}$; batch size 1 with eight gradient
+accumulation steps; maximum sequence length 2,048; seed 42. \\
+LoRA targets & Query, key, value, attention-output, gate, up, and down
+projection modules. \\
+Evaluation & Greedy decoding over 300 test documents, maximum 192 new
+tokens, and strict exact complete-triple micro precision, recall, and F1. \\
+Runtime & Kaggle GPU runtime with a CUDA 12.8-compatible four-bit stack.
+Natural-language training took 3 h 29 min 39 s; programming-language
+training took 4 h 36 min 26 s. \\
+\end{longtable}
+\normalsize
+}
+
+\subsection{Observed Results}
+\label{implementation-observed-results}
+
+The two adapters were evaluated on the same 300-document test split. The
+following values are direct outputs of the strict evaluator.
+
+\begin{center}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Condition} & \textbf{TP} & \textbf{FP} & \textbf{FN} &
+\textbf{Precision} & \textbf{Recall} & \textbf{Micro F1} \\
+\midrule
+Natural language & 35 & 7 & 407 & 0.8333 & 0.0792 & 0.1446 \\
+Programming language & 349 & 377 & 93 & 0.4807 & 0.7896 & 0.5976 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{center}
+
+The programming-language condition improved micro F1 by 0.4530 absolute
+over the natural-language condition and achieved 4.13 times its F1. Its
+main advantage was recall: it recovered 349 of the 442 gold triples,
+compared with 35 for the natural-language condition. This gain came with
+lower precision. The natural-language adapter produced only 42 predicted
+triples, whereas the programming-language adapter produced 726, including
+377 false positives. Thus, the natural representation was highly
+conservative, while the programming representation favored much broader
+coverage.
+
+The observed programming-language F1 of 0.5976 remains 0.2144 below the
+paper's best reported ADE score of 0.812 for
+Mistral-7B-Instruct-v0.3 with a code prompt. Moreover, the large gap
+between the two implemented conditions does not reproduce the paper's
+broader finding that prompt representation usually matters little after
+fine-tuning. The result nevertheless provides clear evidence that, under
+this specific implementation and run, the Python-style representation
+was substantially more effective than the JSON representation.
+
+The final training loss was also lower for the programming-language
+condition (0.5616 average) than for the natural-language condition
+(0.7415 average). These losses should not be compared as a standalone
+quality measure because the two output serializations have different
+token lengths and structures; the matched strict test metric is the
+primary comparison.
+
+\subsection{Limitations of the Implementation Study}
+\label{limitations-of-the-implementation-study}
+
+\begin{itemize}
+\item
+  The experiment covers one dataset, one model, and one training seed.
+  It is a single-dataset reproduction, not a replication of the paper's
+  175 evaluated model conditions.
+\item
+  ADE has only one relation type and is the least structurally complex
+  benchmark in the paper. The result may not transfer to CoNLL04,
+  SciERC, multilingual data, or larger relation inventories.
+\item
+  Strict exact matching makes the comparison sensitive to entity
+  spelling, ordering, output grammar, and parser acceptance. The very
+  low natural-language recall warrants a separate analysis of raw outputs
+  and parse-failure rates before attributing the full gap to extraction
+  ability.
+\item
+  Greedy decoding is deterministic for a fixed environment, but GPU
+  kernels, package versions, quantization behavior, and data preparation
+  can still affect reproducibility.
+\item
+  No confidence interval or multi-seed variance is available. At least
+  three independently trained seeds are needed before treating the
+  observed 0.4530 F1 gap as a stable effect.
+\item
+  The adapters and dataset are not redistributed in the public
+  repository. Reproduction therefore requires obtaining the ADE split
+  separately and rerunning the documented Kaggle workflow.
+\end{itemize}
 
 \end{document}
