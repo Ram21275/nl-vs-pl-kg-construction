@@ -1357,6 +1357,167 @@ distribution terms or are run-specific artifacts. The repository
 documents the required file schema and regenerates predictions and
 metrics when the notebook is executed.
 
+\subsection{Implementation Design in Simple Terms}
+\label{implementation-design-in-simple-terms}
+
+\subsubsection{What the system learns}
+
+Each ADE record contains a sentence or short passage $x_i$ and a set of
+gold knowledge-graph triples
+
+\[
+G_i = \{(h,r,t)\},
+\]
+
+where $h$ is the head entity, $r$ is the relation, and $t$ is the tail
+entity. In plain language, a triple states that two named entities are
+connected by a particular relation. For example, an illustrative triple
+might connect a drug to an adverse effect. The model's job is to read
+$x_i$ and produce a predicted set $P_i$ containing all and only the
+triples supported by that text.
+
+The experiment does not compare two different tasks. Both conditions use
+the same model, training and test records, demonstrations, update budget,
+and evaluator. The only intended difference is how the task is expressed:
+ordinary JSON-like output in the natural-language condition versus a
+Python-like function and \texttt{Triple} objects in the programming-
+language condition. Two separate LoRA adapters are trained so that the
+learning process for one representation cannot alter the other.
+
+\subsubsection{End-to-end processing pipeline}
+
+The implementation can be understood as seven consecutive stages:
+
+\begin{enumerate}
+\item
+  \textbf{Load and validate the data.} Each JSON record must contain
+  input text and zero or more three-part triples. Malformed triples are
+  rejected before training, which prevents silent changes to the task.
+\item
+  \textbf{Choose demonstrations.} Three examples from the training split
+  are placed inside each prompt. During training, the selection is
+  deterministic but varies by training record through the seed
+  $42+i$. The current record is excluded from its own demonstrations.
+  During testing, one fixed seed selects the same three demonstrations
+  for every test record and for both prompt conditions.
+\item
+  \textbf{Serialize the same target in two ways.} A gold triple is
+  written either as a JSON list or as a literal
+  \texttt{Triple(head, relation, tail)} call. The underlying entities and
+  relation do not change.
+\item
+  \textbf{Create chat-formatted training sequences.} The system
+  instruction, demonstrations, input text, and correct assistant answer
+  are passed through Mistral's chat template. This produces the token
+  sequence used for supervised fine-tuning.
+\item
+  \textbf{Train one lightweight adapter per condition.} The frozen
+  Mistral-7B base model is loaded in four-bit form, while small LoRA
+  matrices learn the task-specific changes. This reduces GPU memory use
+  enough for a Kaggle accelerator.
+\item
+  \textbf{Generate and safely parse predictions.} At test time, the model
+  completes each prompt without random sampling. Natural-language output
+  is interpreted as a list; code-style output is searched for literal
+  \texttt{Triple(...)} calls. Generated Python is never executed.
+\item
+  \textbf{Compare complete triples.} Predicted and gold triples are
+  converted to sets for each document. Exact set intersections and
+  differences are accumulated over all 300 test documents to obtain
+  micro precision, recall, and F1.
+\end{enumerate}
+
+This design isolates the representation question reasonably well:
+everything after generation is deterministic, and the evaluator treats a
+triple as correct only when all three of its strings match a gold triple.
+
+\subsection{Prompt Construction and Output Formats}
+\label{prompt-construction-and-output-formats}
+
+The natural-language prompt tells the model to extract triples and return
+only a JSON array. Its answer has the following general form:
+
+\begin{quote}
+\small\ttfamily
+[[``head'', ``relation'', ``tail'']]
+\end{quote}
+
+The programming-language prompt frames the model as a Python assistant.
+It defines a frozen \texttt{Triple} data class and an
+\texttt{extract(text)} function, then asks the model to complete only the
+function body. Its answer has the following general form:
+
+\begin{quote}
+\small\ttfamily
+return [Triple(``head'', ``relation'', ``tail'')]
+\end{quote}
+
+These examples illustrate formatting rather than reproduce a particular
+ADE record. In both conditions, the three demonstrations show the same
+mapping from text to triples. Consequently, the comparison asks whether
+the model benefits from a familiar programming pattern, not whether one
+condition receives more task knowledge. The token sequences are not
+identical, however: the code schema and the two output syntaxes differ in
+length and vocabulary. That distinction is part of the representation
+effect being measured.
+
+\subsection{QLoRA Fine-Tuning and Its Mathematics}
+\label{qlora-fine-tuning-and-its-mathematics}
+
+Training all parameters of a seven-billion-parameter model is expensive.
+QLoRA combines two memory-saving ideas. First, the base weights are kept
+in four-bit NormalFloat (NF4) form, with double quantization, while the
+main calculations use BF16 when the GPU supports it and FP16 otherwise.
+Second, the base weights remain frozen and only small low-rank correction
+matrices are trained.
+
+For a model weight matrix $W$, LoRA uses
+
+\[
+W^{\prime} = W + \Delta W
+             = W + \frac{\alpha}{r}BA,
+\]
+
+where $W$ is frozen, $A$ and $B$ are trainable matrices, $r$ is the LoRA
+rank, and $\alpha$ controls the correction's scale. This implementation
+uses $r=16$ and $\alpha=16$, so the explicit scale $\alpha/r$ is 1. LoRA
+is applied to the query, key, value, attention-output, gate, up, and down
+projection layers. In simple terms, the full model supplies its existing
+language ability, and the small matrices learn how to express ADE
+triples in the requested format.
+
+The trainer receives a tokenized chat sequence
+$z_1,z_2,\ldots,z_T$ and minimizes causal next-token cross-entropy:
+
+\[
+\mathcal{L}
+= -\frac{1}{T-1}\sum_{t=2}^{T}
+  \log p_{\theta}(z_t \mid z_1,\ldots,z_{t-1}).
+\]
+
+This means that the model is repeatedly asked to assign high probability
+to the actual next token in the formatted system message, prompt, and
+answer. Gradient descent updates the LoRA parameters $\theta$ rather than
+the quantized base weights. Because the natural and code sequences have
+different tokens and lengths, their training losses are useful for
+monitoring each run but are not a perfectly controlled measure of which
+representation is better. The matched test-set F1 is the appropriate
+primary comparison.
+
+The physical batch size is one sequence, but gradients from eight
+successive micro-batches are added before each optimizer update. Thus,
+
+\[
+\text{effective batch size}
+= 1 \times 8 = 8\ \text{sequences per update}.
+\]
+
+At 200 optimizer updates, the nominal schedule processes about
+$200\times8=1{,}600$ training-example presentations, or approximately
+$1{,}600/2{,}563=0.62$ of one pass through the training split. Gradient
+checkpointing further reduces memory use by recomputing selected forward
+activations during backpropagation instead of storing all of them.
+
 \subsection{Experimental Configuration}
 \label{implementation-experimental-configuration}
 
@@ -1392,6 +1553,69 @@ training took 4 h 36 min 26 s. \\
 \normalsize
 }
 
+\begin{minipage}{\textwidth}
+\subsection{Inference, Safe Parsing, and Evaluation Mathematics}
+\label{inference-safe-parsing-and-evaluation-mathematics}
+
+For each test document, the correct adapter is attached to the same
+four-bit base model. Greedy decoding selects the most probable next token
+at every step,
+\end{minipage}
+
+\[
+\hat{z}_t = \underset{v}{\operatorname{arg\,max}}\;
+p_{\theta}(v\mid z_{<t}),
+\]
+
+and stops at the end-of-sequence token or after 192 new tokens. Because
+sampling is disabled, repeated inference in the same software and
+hardware environment should select the same tokens.
+
+The generated text must then be converted back into triples. For the
+natural condition, the parser first attempts strict JSON and then a safe
+Python-literal interpretation to tolerate small quotation differences.
+For the code condition, a regular expression extracts only literal
+\texttt{Triple} calls with three quoted fields. The code is never passed
+to \texttt{eval}, \texttt{exec}, or a Python interpreter. Outputs that
+cannot be parsed contribute no predicted triples, which can strongly
+reduce recall.
+
+Let $G_i$ be the set of gold triples and $P_i$ the set of predicted
+triples for document $i$. The evaluator computes
+
+\begin{align*}
+\mathrm{TP} &= \sum_i |G_i\cap P_i|,\\
+\mathrm{FP} &= \sum_i |P_i-G_i|,\\
+\mathrm{FN} &= \sum_i |G_i-P_i|.
+\end{align*}
+
+Here, a true positive is an exactly correct complete triple; a false
+positive is predicted but not gold; and a false negative is gold but
+missing. Duplicates within one document do not increase any count because
+the evaluator uses sets. The order of triples does not matter, but the
+strings inside a triple must match after surrounding whitespace is
+removed.
+
+The final metrics are
+
+\begin{align*}
+\mathrm{Precision} &= \frac{\mathrm{TP}}
+  {\mathrm{TP}+\mathrm{FP}},\\
+\mathrm{Recall} &= \frac{\mathrm{TP}}
+  {\mathrm{TP}+\mathrm{FN}},\\
+\mathrm{F1} &= \frac{2\,\mathrm{Precision}\,\mathrm{Recall}}
+  {\mathrm{Precision}+\mathrm{Recall}}
+  = \frac{2\mathrm{TP}}
+  {2\mathrm{TP}+\mathrm{FP}+\mathrm{FN}}.
+\end{align*}
+
+Precision answers, ``When the model outputs a triple, how often is it
+right?'' Recall answers, ``Of all gold triples, how many did the model
+find?'' F1 is their harmonic mean, so it becomes high only when both are
+reasonably high. The adjective \emph{micro} means that TP, FP, and FN are
+summed over all documents before calculating the ratios; documents with
+more triples therefore contribute more to the final score.
+
 \subsection{Observed Results}
 \label{implementation-observed-results}
 
@@ -1412,6 +1636,42 @@ Programming language & 349 & 377 & 93 & 0.4807 & 0.7896 & 0.5976 \\
 \end{tabular}
 \normalsize
 \end{center}
+
+The natural-language values can be checked directly from the counts:
+
+\[
+P_{\mathrm{natural}}=\frac{35}{35+7}=0.8333,
+\qquad
+R_{\mathrm{natural}}=\frac{35}{35+407}=0.0792,
+\]
+
+\[
+F1_{\mathrm{natural}}
+=\frac{2(35)}{2(35)+7+407}
+=\frac{70}{484}=0.1446.
+\]
+
+For the programming-language condition,
+
+\[
+P_{\mathrm{code}}=\frac{349}{349+377}=0.4807,
+\qquad
+R_{\mathrm{code}}=\frac{349}{349+93}=0.7896,
+\]
+
+\[
+F1_{\mathrm{code}}
+=\frac{2(349)}{2(349)+377+93}
+=\frac{698}{1{,}168}=0.5976.
+\]
+
+Both rows contain the same $442$ gold triples because
+$\mathrm{TP}+\mathrm{FN}=442$. The natural adapter predicted only
+$35+7=42$ triples and was correct on most of them, which explains its
+high precision but extremely low recall. The code adapter predicted
+$349+377=726$ triples. It found far more of the gold set, but it also
+added many unsupported triples, producing the opposite balance: much
+higher recall and lower precision.
 
 The programming-language condition improved micro F1 by 0.4530 absolute
 over the natural-language condition and achieved 4.13 times its F1. Its
